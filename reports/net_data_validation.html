@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>net Data Validation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+    h1 { color: #333; } h2 { color: #555; margin-top: 30px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+    th { background: #4a90d9; color: white; }
+    tr:nth-child(even) { background: #f2f2f2; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:12px;
+              background:#4a90d9; color:white; font-size:0.85em; }
+  </style>
+</head>
+<body>
+  <h1>Data Validation Report: <span class="badge">net</span></h1>
+  <p><b>Total rows:</b> 20,000 &nbsp;|&nbsp;
+     <b>Features:</b> 7 &nbsp;|&nbsp;
+     <b>Label counts:</b> {1: 16064, 0: 3936}</p>
+
+  <h2>Null Rates (%)</h2>
+  <table>
+    <tr><th>Column</th><th>Null %</th></tr>
+    <tr><td>fwd_pkt_count</td><td>0.0</td></tr><tr><td>bwd_pkt_count</td><td>0.0</td></tr><tr><td>flow_bytes_per_sec</td><td>0.0</td></tr><tr><td>flow_pkts_per_sec</td><td>0.0</td></tr><tr><td>iat_mean</td><td>0.0</td></tr><tr><td>iat_std</td><td>0.0</td></tr><tr><td>label</td><td>0.0</td></tr><tr><td>flow_duration_log</td><td>0.0</td></tr>
+  </table>
+
+  <h2>Descriptive Statistics</h2>
+  <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>fwd_pkt_count</th>
+      <th>bwd_pkt_count</th>
+      <th>flow_bytes_per_sec</th>
+      <th>flow_pkts_per_sec</th>
+      <th>iat_mean</th>
+      <th>iat_std</th>
+      <th>label</th>
+      <th>flow_duration_log</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>20000.0000</td>
+      <td>20000.0000</td>
+      <td>2.000000e+04</td>
+      <td>2.000000e+04</td>
+      <td>2.000000e+04</td>
+      <td>2.000000e+04</td>
+      <td>20000.0000</td>
+      <td>20000.0000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>20.1373</td>
+      <td>24.7460</td>
+      <td>5.594970e+05</td>
+      <td>7.038176e+04</td>
+      <td>1.292185e+06</td>
+      <td>2.980558e+06</td>
+      <td>0.8032</td>
+      <td>9.9840</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>1423.1909</td>
+      <td>1900.1052</td>
+      <td>1.847490e+06</td>
+      <td>2.500763e+05</td>
+      <td>4.373088e+06</td>
+      <td>8.134754e+06</td>
+      <td>0.3976</td>
+      <td>5.4675</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>1.0000</td>
+      <td>0.0000</td>
+      <td>0.000000e+00</td>
+      <td>-2.000000e+06</td>
+      <td>-1.000000e+00</td>
+      <td>0.000000e+00</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>2.0000</td>
+      <td>1.0000</td>
+      <td>1.193616e+02</td>
+      <td>3.205500e+00</td>
+      <td>6.400000e+01</td>
+      <td>0.000000e+00</td>
+      <td>1.0000</td>
+      <td>5.0626</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>2.0000</td>
+      <td>2.0000</td>
+      <td>4.529459e+03</td>
+      <td>1.013257e+02</td>
+      <td>1.222335e+04</td>
+      <td>1.516992e+02</td>
+      <td>1.0000</td>
+      <td>10.3582</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>5.0000</td>
+      <td>4.0000</td>
+      <td>1.621622e+05</td>
+      <td>2.298851e+04</td>
+      <td>3.620040e+05</td>
+      <td>8.252802e+05</td>
+      <td>1.0000</td>
+      <td>15.0847</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>159079.0000</td>
+      <td>207396.0000</td>
+      <td>1.233333e+07</td>
+      <td>2.000000e+06</td>
+      <td>1.200000e+08</td>
+      <td>7.410000e+07</td>
+      <td>1.0000</td>
+      <td>18.6030</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

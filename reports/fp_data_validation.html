@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>fp Data Validation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+    h1 { color: #333; } h2 { color: #555; margin-top: 30px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+    th { background: #4a90d9; color: white; }
+    tr:nth-child(even) { background: #f2f2f2; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:12px;
+              background:#4a90d9; color:white; font-size:0.85em; }
+  </style>
+</head>
+<body>
+  <h1>Data Validation Report: <span class="badge">fp</span></h1>
+  <p><b>Total rows:</b> 240 &nbsp;|&nbsp;
+     <b>Features:</b> 10 &nbsp;|&nbsp;
+     <b>Label counts:</b> {1: 120, 0: 120}</p>
+
+  <h2>Null Rates (%)</h2>
+  <table>
+    <tr><th>Column</th><th>Null %</th></tr>
+    <tr><td>canvas_hash</td><td>0.0</td></tr><tr><td>webgl_renderer_hash</td><td>0.0</td></tr><tr><td>ua_bot_score</td><td>0.0</td></tr><tr><td>timezone_offset</td><td>0.0</td></tr><tr><td>language_count</td><td>0.0</td></tr><tr><td>plugin_count</td><td>0.0</td></tr><tr><td>screen_resolution_category</td><td>0.0</td></tr><tr><td>touch_support</td><td>0.0</td></tr><tr><td>webdriver_flag</td><td>0.0</td></tr><tr><td>font_count</td><td>0.0</td></tr><tr><td>label</td><td>0.0</td></tr>
+  </table>
+
+  <h2>Descriptive Statistics</h2>
+  <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>canvas_hash</th>
+      <th>webgl_renderer_hash</th>
+      <th>ua_bot_score</th>
+      <th>timezone_offset</th>
+      <th>language_count</th>
+      <th>plugin_count</th>
+      <th>screen_resolution_category</th>
+      <th>touch_support</th>
+      <th>webdriver_flag</th>
+      <th>font_count</th>
+      <th>label</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>240.0000</td>
+      <td>240.0000</td>
+      <td>240.0000</td>
+      <td>240.0000</td>
+      <td>240.0000</td>
+      <td>240.0000</td>
+      <td>240.0</td>
+      <td>240.0</td>
+      <td>240.000</td>
+      <td>240.0000</td>
+      <td>240.000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>48045.0417</td>
+      <td>70009.6958</td>
+      <td>0.1792</td>
+      <td>0.7208</td>
+      <td>1.6250</td>
+      <td>5.3042</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>0.500</td>
+      <td>5.5375</td>
+      <td>0.500</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>28200.9667</td>
+      <td>30479.4478</td>
+      <td>0.3843</td>
+      <td>3.6659</td>
+      <td>0.4851</td>
+      <td>5.2146</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.501</td>
+      <td>5.5748</td>
+      <td>0.501</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>114.0000</td>
+      <td>355.0000</td>
+      <td>0.0000</td>
+      <td>-5.0000</td>
+      <td>1.0000</td>
+      <td>1.0000</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>0.000</td>
+      <td>1.0000</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>26317.7500</td>
+      <td>46187.2500</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>1.0000</td>
+      <td>1.0000</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>0.000</td>
+      <td>1.0000</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>46419.0000</td>
+      <td>92910.0000</td>
+      <td>0.0000</td>
+      <td>1.0000</td>
+      <td>2.0000</td>
+      <td>3.0000</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>0.500</td>
+      <td>3.0000</td>
+      <td>0.500</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>71329.0000</td>
+      <td>92910.0000</td>
+      <td>0.0000</td>
+      <td>5.5000</td>
+      <td>2.0000</td>
+      <td>8.0000</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>1.000</td>
+      <td>8.0000</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>99911.0000</td>
+      <td>99237.0000</td>
+      <td>1.0000</td>
+      <td>5.5000</td>
+      <td>2.0000</td>
+      <td>16.0000</td>
+      <td>2.0</td>
+      <td>0.0</td>
+      <td>1.000</td>
+      <td>16.0000</td>
+      <td>1.000</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

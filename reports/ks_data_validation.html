@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ks Data Validation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+    h1 { color: #333; } h2 { color: #555; margin-top: 30px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+    th { background: #4a90d9; color: white; }
+    tr:nth-child(even) { background: #f2f2f2; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:12px;
+              background:#4a90d9; color:white; font-size:0.85em; }
+  </style>
+</head>
+<body>
+  <h1>Data Validation Report: <span class="badge">ks</span></h1>
+  <p><b>Total rows:</b> 816 &nbsp;|&nbsp;
+     <b>Features:</b> 8 &nbsp;|&nbsp;
+     <b>Label counts:</b> {1: 408, 0: 408}</p>
+
+  <h2>Null Rates (%)</h2>
+  <table>
+    <tr><th>Column</th><th>Null %</th></tr>
+    <tr><td>hold_time_mean</td><td>0.0</td></tr><tr><td>hold_time_std</td><td>0.0</td></tr><tr><td>flight_time_mean</td><td>0.0</td></tr><tr><td>flight_time_std</td><td>0.0</td></tr><tr><td>digraph_mean</td><td>0.0</td></tr><tr><td>digraph_std</td><td>0.0</td></tr><tr><td>error_rate</td><td>0.0</td></tr><tr><td>session_duration</td><td>0.0</td></tr><tr><td>label</td><td>0.0</td></tr>
+  </table>
+
+  <h2>Descriptive Statistics</h2>
+  <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>hold_time_mean</th>
+      <th>hold_time_std</th>
+      <th>flight_time_mean</th>
+      <th>flight_time_std</th>
+      <th>digraph_mean</th>
+      <th>digraph_std</th>
+      <th>error_rate</th>
+      <th>session_duration</th>
+      <th>label</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>816.0000</td>
+      <td>816.0000</td>
+      <td>816.0000</td>
+      <td>816.0000</td>
+      <td>816.0000</td>
+      <td>816.0000</td>
+      <td>816.0</td>
+      <td>816.0000</td>
+      <td>816.0000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>0.0538</td>
+      <td>0.0145</td>
+      <td>0.0882</td>
+      <td>0.0886</td>
+      <td>0.1333</td>
+      <td>0.0870</td>
+      <td>0.0</td>
+      <td>66.6738</td>
+      <td>0.5000</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>0.0390</td>
+      <td>0.0091</td>
+      <td>0.1009</td>
+      <td>0.1077</td>
+      <td>0.1350</td>
+      <td>0.1065</td>
+      <td>0.0</td>
+      <td>67.5199</td>
+      <td>0.5003</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>0.0166</td>
+      <td>0.0067</td>
+      <td>0.0062</td>
+      <td>0.0069</td>
+      <td>0.0166</td>
+      <td>0.0068</td>
+      <td>0.0</td>
+      <td>8.2999</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>0.0175</td>
+      <td>0.0072</td>
+      <td>0.0175</td>
+      <td>0.0072</td>
+      <td>0.0175</td>
+      <td>0.0072</td>
+      <td>0.0</td>
+      <td>8.7524</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>0.0303</td>
+      <td>0.0076</td>
+      <td>0.0182</td>
+      <td>0.0312</td>
+      <td>0.0679</td>
+      <td>0.0280</td>
+      <td>0.0</td>
+      <td>33.9475</td>
+      <td>0.5000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>0.0887</td>
+      <td>0.0209</td>
+      <td>0.1358</td>
+      <td>0.1539</td>
+      <td>0.2251</td>
+      <td>0.1503</td>
+      <td>0.0</td>
+      <td>112.5321</td>
+      <td>1.0000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>0.1562</td>
+      <td>0.0904</td>
+      <td>0.9000</td>
+      <td>1.4592</td>
+      <td>1.0032</td>
+      <td>1.4561</td>
+      <td>0.0</td>
+      <td>501.5903</td>
+      <td>1.0000</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

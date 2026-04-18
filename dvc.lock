@@ -1,0 +1,58 @@
+schema: '2.0'
+stages:
+  featurize:
+    cmd: "python src/features/ks_pipeline.py && python src/features/ms_pipeline.py
+      && python src/features/fp_pipeline.py && python src/features/net_pipeline.py
+      && python src/features/wb_pipeline.py\n"
+    deps:
+    - path: data/raw/fingerprint
+      hash: md5
+      md5: 4929a367fbb496bec87b04716f70e52a.dir
+      size: 1058768
+      nfiles: 245
+    - path: data/raw/keystroke
+      hash: md5
+      md5: fec4f2cfdbce3203ced91faf973e0462.dir
+      size: 4669935
+      nfiles: 1
+    - path: data/raw/mouse
+      hash: md5
+      md5: d022784953c1e76378272cb5feecdeb3.dir
+      size: 204166141
+      nfiles: 1677
+    - path: data/raw/network
+      hash: md5
+      md5: acf928b43f089e74039fc8dba08e4dd7.dir
+      size: 884645759
+      nfiles: 8
+    - path: data/raw/webbot
+      hash: md5
+      md5: ebf5ba57da4257608d18bc432472bab3.dir
+      size: 369222451
+      nfiles: 265
+    - path: src/features/
+      hash: md5
+      md5: 8cdced4c9fcba64b0b0e2e0fa4fd207d.dir
+      size: 98822
+      nfiles: 12
+    outs:
+    - path: data/processed/fp_features.parquet
+      hash: md5
+      md5: 97d5efadf58d3f26d6350930f121ccf2
+      size: 9862
+    - path: data/processed/ks_features.parquet
+      hash: md5
+      md5: 68068ac97286d8c8c631b905cb98ccf7
+      size: 58803
+    - path: data/processed/ms_features.parquet
+      hash: md5
+      md5: 53cf8ae83540940cd024a6f8444d3684
+      size: 1823327
+    - path: data/processed/net_features.parquet
+      hash: md5
+      md5: 512d2ea5408d54c6f99be78727939429
+      size: 695973
+    - path: data/processed/wb_features.parquet
+      hash: md5
+      md5: d187540961463304600aee109f3e75a8
+      size: 10874

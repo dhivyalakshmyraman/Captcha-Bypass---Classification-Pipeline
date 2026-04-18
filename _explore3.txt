@@ -1,0 +1,5 @@
+﻿Type: <class 'dict'>
+Keys: ['session_id', 'total_behaviour', 'mousemove_times', 'mousemove_total_behaviour']
+session_id: 071tbv7fsev5d64kb0f9jieor6
+total_behaviour (first 300): [m(6,7)][m(14,15)][m(21,23)][m(29,31)][m(37,39)][m(44,47)][m(52,55)][m(60,63)][m(67,71)][m(75,79)][m(82,87)][m(90,95)][m(98,103)][m(105,111)][m(113,119)][m(121,127)][m(128,135)][m(136,143)][m(144,151)][m(151,159)][m(159,167)][m(166,175)][m(174,183)][m(182,191)][m(189,199)][m(197,207)][m(205,215)][m(
+total_behaviour length: 151614

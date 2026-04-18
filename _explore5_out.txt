@@ -1,0 +1,35 @@
+﻿PARSED: - 29/Oct/2019:09:17:51 +000 GET / HTTP/1.1 session: - ua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+PARSED: - 29/Oct/2019:09:17:51 +000 GET /css/main.css HTTP/1.1 session: g2gh9qmk9krld14h5uojlg7g10 ua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+PARSED: - 29/Oct/2019:09:17:51 +000 GET /js/initialise_vars.js HTT session: g2gh9qmk9krld14h5uojlg7g10 ua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+PARSED: - 29/Oct/2019:09:17:52 +000 GET /js/cookies_functions.js H session: g2gh9qmk9krld14h5uojlg7g10 ua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+PARSED: - 29/Oct/2019:09:17:52 +000 GET /js/mousemove_ontimeout.js session: g2gh9qmk9krld14h5uojlg7g10 ua: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+
+Total unique sessions in logs: 445
+Annotations train: 70 sessions
+Labels: {'human', 'advanced_bot'}
+Sessions matching annotations: 70
+  Session dr09rk5eagjuu87gedvdqmq3gl: human, 184 requests, UA: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, l
+  Session gq715ms79515gcq39vf91mli6t: human, 309 requests, UA: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, l
+  Session hrbko2t4t14q3pahqltndlolb5: human, 222 requests, UA: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, l
+
+Phase2 annotations:
+  humans_and_advanced_bots/humans_and_advanced_bots: 112 entries
+    Sample: koftcfkosigp4f2ibgfi0dm0co_0 human
+
+
+Network intrusion labels across files:
+  BENIGN: 2273097
+  DoS Hulk: 231073
+  PortScan: 158930
+  DDoS: 128027
+  DoS GoldenEye: 10293
+  FTP-Patator: 7938
+  SSH-Patator: 5897
+  DoS slowloris: 5796
+  DoS Slowhttptest: 5499
+  Bot: 1966
+  Web Attack ∩┐╜ Brute Force: 1507
+  Web Attack ∩┐╜ XSS: 652
+  Infiltration: 36
+  Web Attack ∩┐╜ Sql Injection: 21
+  Heartbleed: 11

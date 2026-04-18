@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ms Data Validation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+    h1 { color: #333; } h2 { color: #555; margin-top: 30px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+    th { background: #4a90d9; color: white; }
+    tr:nth-child(even) { background: #f2f2f2; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:12px;
+              background:#4a90d9; color:white; font-size:0.85em; }
+  </style>
+</head>
+<body>
+  <h1>Data Validation Report: <span class="badge">ms</span></h1>
+  <p><b>Total rows:</b> 41,394 &nbsp;|&nbsp;
+     <b>Features:</b> 7 &nbsp;|&nbsp;
+     <b>Label counts:</b> {1: 32622, 0: 8772}</p>
+
+  <h2>Null Rates (%)</h2>
+  <table>
+    <tr><th>Column</th><th>Null %</th></tr>
+    <tr><td>velocity_mean</td><td>0.0</td></tr><tr><td>velocity_std</td><td>0.0</td></tr><tr><td>acceleration_mean</td><td>0.0</td></tr><tr><td>curvature_mean</td><td>0.0</td></tr><tr><td>idle_ratio</td><td>0.0</td></tr><tr><td>click_count</td><td>0.0</td></tr><tr><td>direction_changes</td><td>0.0</td></tr><tr><td>label</td><td>0.0</td></tr>
+  </table>
+
+  <h2>Descriptive Statistics</h2>
+  <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>velocity_mean</th>
+      <th>velocity_std</th>
+      <th>acceleration_mean</th>
+      <th>curvature_mean</th>
+      <th>idle_ratio</th>
+      <th>click_count</th>
+      <th>direction_changes</th>
+      <th>label</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>4.139400e+04</td>
+      <td>4.139400e+04</td>
+      <td>4.139400e+04</td>
+      <td>41394.0000</td>
+      <td>41394.0000</td>
+      <td>41394.0000</td>
+      <td>41394.0000</td>
+      <td>41394.0000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>1.416222e+07</td>
+      <td>5.923917e+07</td>
+      <td>1.097221e+13</td>
+      <td>80187.8837</td>
+      <td>0.1175</td>
+      <td>6.9878</td>
+      <td>30.8686</td>
+      <td>0.7881</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>7.431834e+07</td>
+      <td>4.104406e+08</td>
+      <td>2.861057e+13</td>
+      <td>61075.0403</td>
+      <td>0.1082</td>
+      <td>6.3093</td>
+      <td>20.9155</td>
+      <td>0.4087</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>2.921120e+06</td>
+      <td>1.074507e+07</td>
+      <td>2.458075e+12</td>
+      <td>31766.4592</td>
+      <td>0.0558</td>
+      <td>2.0000</td>
+      <td>15.0000</td>
+      <td>1.0000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>5.844976e+06</td>
+      <td>2.313875e+07</td>
+      <td>5.269383e+12</td>
+      <td>76086.8969</td>
+      <td>0.1042</td>
+      <td>6.0000</td>
+      <td>28.0000</td>
+      <td>1.0000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>1.166162e+07</td>
+      <td>5.016258e+07</td>
+      <td>1.112860e+13</td>
+      <td>115942.7366</td>
+      <td>0.1489</td>
+      <td>10.0000</td>
+      <td>42.0000</td>
+      <td>1.0000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>8.344287e+09</td>
+      <td>2.637835e+10</td>
+      <td>2.281344e+15</td>
+      <td>897598.1269</td>
+      <td>1.0000</td>
+      <td>126.0000</td>
+      <td>252.0000</td>
+      <td>1.0000</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

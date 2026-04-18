@@ -1,0 +1,92 @@
+stages:
+  featurize:
+    cmd: >
+      python src/features/ks_pipeline.py &&
+      python src/features/ms_pipeline.py &&
+      python src/features/fp_pipeline.py &&
+      python src/features/net_pipeline.py &&
+      python src/features/wb_pipeline.py
+    deps:
+      - data/raw/keystroke
+      - data/raw/mouse
+      - data/raw/fingerprint
+      - data/raw/network
+      - data/raw/webbot
+      - src/features/
+    outs:
+      - data/processed/ks_features.parquet
+      - data/processed/ms_features.parquet
+      - data/processed/fp_features.parquet
+      - data/processed/net_features.parquet
+      - data/processed/wb_features.parquet
+
+  train_submodels:
+    cmd: >
+      python src/models/train_ks.py &&
+      python src/models/train_ms.py &&
+      python src/models/train_fp.py &&
+      python src/models/train_net.py &&
+      python src/models/train_wb.py
+    deps:
+      - data/processed/ks_features.parquet
+      - data/processed/ms_features.parquet
+      - data/processed/fp_features.parquet
+      - data/processed/net_features.parquet
+      - data/processed/wb_features.parquet
+      - src/models/
+    outs:
+      - data/processed/ks_pipeline.joblib
+      - data/processed/ms_pipeline.joblib
+      - data/processed/fp_pipeline.joblib
+      - data/processed/net_pipeline.joblib
+      - data/processed/wb_pipeline.joblib
+      - data/processed/ks_test.parquet
+      - data/processed/ms_test.parquet
+      - data/processed/fp_test.parquet
+      - data/processed/net_test.parquet
+      - data/processed/wb_test.parquet
+
+  train_meta:
+    cmd: python src/models/train_meta.py
+    deps:
+      - data/processed/ks_test.parquet
+      - data/processed/ms_test.parquet
+      - data/processed/fp_test.parquet
+      - data/processed/net_test.parquet
+      - data/processed/wb_test.parquet
+      - src/models/train_meta.py
+    outs:
+      - data/processed/meta_model.joblib
+      - data/processed/meta_test.parquet
+
+  gan_train:
+    cmd: python src/gan/train_gan.py
+    deps:
+      - data/processed/ks_features.parquet
+      - data/processed/ms_features.parquet
+      - data/processed/fp_features.parquet
+      - data/processed/wb_features.parquet
+      - src/gan/generator.py
+      - src/gan/discriminator.py
+      - src/gan/train_gan.py
+    outs:
+      - data/processed/ks_adversarial.parquet
+      - data/processed/ms_adversarial.parquet
+      - data/processed/fp_adversarial.parquet
+      - data/processed/net_adversarial.parquet
+      - data/processed/wb_adversarial.parquet
+
+  adversarial_retrain:
+    cmd: python src/gan/retrain_with_augment.py
+    deps:
+      - data/processed/ks_adversarial.parquet
+      - data/processed/ms_adversarial.parquet
+      - data/processed/fp_adversarial.parquet
+      - data/processed/net_adversarial.parquet
+      - data/processed/wb_adversarial.parquet
+      - src/gan/retrain_with_augment.py
+
+  retrain_meta_post_gan:
+    cmd: python src/models/train_meta.py --run_name=meta_model_post_gan_v1
+    deps:
+      - src/models/train_meta.py

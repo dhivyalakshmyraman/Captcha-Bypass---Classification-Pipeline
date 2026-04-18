@@ -1,0 +1,692 @@
+---
+
+## Level 1 sub-models — build each one independently
+
+### 1. DSL keystroke → ks_model
+
+File: src/features/ks_pipeline.py
+Dataset: data/raw/keystroke/DSL-StrongPasswordData.csv
+
+Feature extraction:
+- Per session (group by subject + sessionIndex):
+  - hold_time_mean, hold_time_std — key hold duration stats
+  - flight_time_mean, flight_time_std — between-key latency stats
+  - digraph_mean, digraph_std — consecutive key pair timings
+  - error_rate — number of H(backspace) events / total keys
+  - session_duration — last timestamp minus first
+- Output: one row per session, label col (0=bot, 1=human)
+- Note: DSL dataset has only human subjects. Label all as human=1.
+  Generate synthetic bot rows by: sampling hold/flight times from
+  a uniform(5ms, 30ms) distribution (bots are fast and uniform).
+  Generate 1× the number of human rows as synthetic bot rows.
+
+Model: src/models/train_ks.py
+- Model: RandomForestClassifier(n_estimators=300, max_depth=12, random_state=42)
+- Split: 80/20 stratified train/test
+- Calibrate with CalibratedClassifierCV(method='isotonic', cv=5) on train set
+- Evaluate: ROC-AUC, F1, confusion matrix on test set
+- Save fitted pipeline (scaler + model) to MLflow as artifact 'ks_model'
+- Log params and metrics to MLflow run named 'ks_model_v1'
+
+### 2. Balabit mouse → ms_model
+
+File: src/features/ms_pipeline.py
+Dataset: data/raw/mouse/ — one CSV per user, columns: record_time, state,
+  x, y (check actual Balabit column names and adapt)
+
+Feature extraction (per session, sliding 30-second windows):
+- velocity_mean, velocity_std — pixel distance / time delta
+- acceleration_mean — velocity delta / time delta
+- curvature_mean — angular change per unit distance
+- idle_ratio — fraction of time with zero movement
+- click_count — number of click state transitions
+- direction_changes — count of angle reversals > 45 degrees
+- Output: one row per window, label from Balabit's illegal/legal session labels
+
+Model: src/models/train_ms.py
+- Model: RandomForestClassifier(n_estimators=300, max_depth=12, random_state=42)
+- Same calibration, split, eval, MLflow logging as ks_model
+- Save as artifact 'ms_model'
+
+### 3. Fingerprint HTML → fp_model
+
+File: src/features/fp_pipeline.py
+Dataset: data/raw/fingerprint/human/*.html and data/raw/fingerprint/bot/*.html
+
+Feature extraction (parse each HTML file with BeautifulSoup + re):
+- canvas_hash — hash of toDataURL canvas value if present in script
+- webgl_renderer_hash — hash of WebGL renderer string
+- ua_bot_score — regex score: contains 'HeadlessChrome'=1, 'PhantomJS'=1, else 0
+- timezone_offset — extracted numeric offset
+- language_count — len of languages array
+- plugin_count — len of plugins array
+- screen_resolution_category — bucketed: mobile/tablet/desktop/unusual
+- touch_support — 0/1
+- webdriver_flag — 0/1 (navigator.webdriver present and true)
+- font_count — number of fonts detected
+- Label: 1 if from human/ folder, 0 if from bot/ folder
+
+Model: src/models/train_fp.py
+- Model: XGBClassifier(n_estimators=300, max_depth=6, learning_rate=0.05,
+    subsample=0.8, colsample_bytree=0.8, random_state=42, eval_metric='logloss')
+- Same calibration, split, eval, MLflow logging
+- Save as artifact 'fp_model'
+
+### 4. CIC-IDS-2017 → net_model
+
+File: src/features/net_pipeline.py
+Dataset: data/raw/network/ — multiple CSVs with columns including
+  'Flow Duration', 'Total Fwd Packets', 'Total Backward Packets',
+  'Flow Bytes/s', 'Flow Packets/s', 'Flow IAT Mean', 'Flow IAT Std',
+  ' Label' (note: CIC-IDS columns have leading spaces — strip all column names)
+
+Feature extraction:
+- flow_duration_log — log1p of flow duration
+- fwd_pkt_count, bwd_pkt_count
+- flow_bytes_per_sec — clip outliers at 99th percentile
+- flow_pkts_per_sec
+- iat_mean, iat_std — inter-arrival time stats
+- Label mapping: 'BENIGN' → 1 (human/normal), everything else → 0 (attack/bot)
+- Drop rows where flow_bytes_per_sec is inf or NaN
+
+Model: src/models/train_net.py
+- Model: IsolationForest(n_estimators=200, contamination=0.3, random_state=42)
+  Train ONLY on BENIGN rows — unsupervised, learns what normal looks like.
+  At predict time: decision_function output → scale to [0,1] via MinMaxScaler
+  → interpret as p(bot): high anomaly score = high p(bot).
+- No calibration needed (output is already a continuous score).
+- Evaluate: ROC-AUC using full labeled test set (bot rows as positives).
+- Save scaler + model as artifact 'net_model'
+
+### 5. m4d web bot → wb_model
+
+File: src/features/wb_pipeline.py
+Dataset: data/raw/webbot/ — inspect actual file format first with
+  pandas read_csv or read_json, then adapt.
+
+Feature extraction (adapt to actual columns, but target these signals):
+- request_rate — requests per second in session
+- ua_entropy — Shannon entropy of user-agent string characters
+- header_order_hash — hash of HTTP header name ordering
+- js_enabled — 0/1
+- timing_regularity — std of inter-request gaps (low std = bot)
+- referrer_present — 0/1
+- Label: whatever bot/human label column exists in m4d dataset
+
+Model: src/models/train_wb.py
+- Model: XGBClassifier same hyperparams as fp_model
+- Same calibration, split, eval, MLflow logging
+- Save as artifact 'wb_model'
+
+---
+
+## Level 2 meta-learner — train_meta.py
+
+File: src/models/train_meta.py
+
+How to generate meta-learner training data (no Playwright, no session fusion):
+
+Step 1: Load the held-out test sets saved by each sub-model training script.
+  Each training script must save its test set features + labels to
+  data/processed/{signal}_test.parquet after training.
+
+Step 2: For each test set, run the corresponding calibrated sub-model
+  to get probability scores:
+    p_ks  = ks_model.predict_proba(ks_test_features)[:,1]
+    p_ms  = ms_model.predict_proba(ms_test_features)[:,1]
+    p_fp  = fp_model.predict_proba(fp_test_features)[:,1]
+    p_net = net_model.predict_proba(net_test_features)[:,1]   # scaled IF score
+    p_wb  = wb_model.predict_proba(wb_test_features)[:,1]
+
+Step 3: For each label class (0 and 1) separately, randomly pair one
+  probability score from each signal's test set using seed=42.
+  This pairing is safe because we are pairing calibrated probabilities
+  (all on the same [0,1] semantic scale), NOT raw features.
+  Missing signal → impute with 0.5 (maximally uncertain prior, not -1 or 0).
+
+Step 4: Build meta training matrix:
+  X_meta shape: (n_rows, 5) columns = [p_ks, p_ms, p_fp, p_net, p_wb]
+  y_meta: the label (0 or 1)
+
+Step 5: Train meta-learner:
+  LogisticRegression(C=1.0, max_iter=1000, random_state=42)
+  80/20 stratified split on X_meta / y_meta
+  Evaluate: ROC-AUC, F1, log loss on meta test set
+  Log to MLflow run named 'meta_model_v1'
+  Save as artifact 'meta_model'
+
+---
+
+## FastAPI inference layer
+
+File: src/api/main.py and src/api/assess.py
+
+On startup:
+- Load all 6 MLflow model artifacts into memory (5 sub-models + meta_model)
+- Load all 5 fitted scikit-learn pipelines (feature transformers)
+- Initialize Redis client for fingerprint hash cache and IP rep cache
+
+POST /v1/assess-session
+Request body (src/api/schemas.py — Pydantic model):
+  {
+    "session_id": str,
+    "keystroke": { ...raw timing fields... } | null,
+    "mouse": { ...raw movement fields... } | null,
+    "fingerprint": { ...raw JS payload fields... } | null,
+    "network": { ...raw flow fields... } | null,
+    "webbot": { ...raw request fields... } | null
+  }
+
+Endpoint logic (assess.py):
+1. For each signal present in request body:
+   - Run through fitted feature pipeline → feature vector
+   - Run sub-model.predict_proba() → probability score
+   - If signal absent: use 0.5
+2. Assemble [p_ks, p_ms, p_fp, p_net, p_wb]
+3. meta_model.predict_proba([[p_ks, p_ms, p_fp, p_net, p_wb]])[0][1] → risk_float
+4. risk_score = int(risk_float * 100)
+5. decision logic:
+   - 0–39: issue signed JWT (python-jose, RS256, 15min expiry) → {"decision": "allow", "token": ...}
+   - 40–69: → {"decision": "stepup", "challenge": "otp"}
+   - 70+:  → HTTPException(403, detail="blocked")
+6. Log session_id, risk_score, decision, signal_presence_mask to BigQuery (or local CSV if BQ not set up)
+
+Use asyncio.gather() to run all five sub-model calls concurrently.
+Target: entire endpoint under 30ms p95.
+
+---
+
+## MLOps wiring
+
+DVC (dvc.yaml):
+  Stage 'featurize': runs all five feature extraction scripts, deps = raw data folders,
+    outs = data/processed/*.parquet
+  Stage 'train_submodels': runs all five train_*.py scripts, deps = processed parquets,
+    outs = mlflow model URIs (or a versions.json file listing run IDs)
+  Stage 'train_meta': runs train_meta.py, deps = all five _test.parquet files
+
+MLflow:
+  Use local tracking: mlflow.set_tracking_uri('mlflow/')
+  Each training script: mlflow.set_experiment('{signal}_detection')
+  Log: all hyperparameters, train/test ROC-AUC, F1, confusion matrix as artifact
+  Register best model to MLflow Model Registry with alias 'production'
+
+Deepchecks (run after featurize stage):
+  For each processed parquet:
+    - Check label imbalance (warn if ratio > 4:1)
+    - Check for high null rate per column (warn if > 40%)
+    - Check for feature drift if a previous version of the parquet exists
+  Save reports to reports/{signal}_data_validation.html
+
+---
+
+## Constraints
+
+- Python 3.10+
+- Libraries: pandas, numpy, scikit-learn, xgboost, fastapi, uvicorn,
+    mlflow, dvc, deepchecks, python-jose, slowapi, redis, beautifulsoup4,
+    pyarrow, scipy
+- All random seeds = 42
+- No hardcoded absolute paths — use pathlib.Path relative to project root
+- Every training script must be runnable standalone:
+    python src/models/train_ks.py --data_dir data/raw/keystroke
+      --processed_dir data/processed --mlflow_uri mlflow/
+- Every feature pipeline must work both offline (called by training scripts)
+    and online (imported by FastAPI assess.py at inference time)
+- The fitted pipeline objects (scalers, encoders) must be saved alongside
+    their models in MLflow so inference never refits anything
+- Add type hints to all functions
+- Add a README.md explaining: how to run DVC pipeline, how to start FastAPI,
+    how to call /v1/assess-session with a sample curl command
+
+Keyboard_Strokes_CSV is the keyboard strokes datast, use the about to understand the labels
+
+web_bot_detection_dataset folder and Browser Fingerprint Dataset folder, one contains logs data, other html data where json load can be extracted,
+
+then there is the network intrusion csv files - use the about Network intrusion to understand the labels
+
+mouse_dynamics foldr are txt file data, use about to understand dataset
+
+What you are expected to do - ---
+
+## Level 1 sub-models — build each one independently
+
+### 1. DSL keystroke → ks_model
+
+File: src/features/ks_pipeline.py
+Dataset: data/raw/keystroke/DSL-StrongPasswordData.csv
+
+Feature extraction:
+- Per session (group by subject + sessionIndex):
+  - hold_time_mean, hold_time_std — key hold duration stats
+  - flight_time_mean, flight_time_std — between-key latency stats
+  - digraph_mean, digraph_std — consecutive key pair timings
+  - error_rate — number of H(backspace) events / total keys
+  - session_duration — last timestamp minus first
+- Output: one row per session, label col (0=bot, 1=human)
+- Note: DSL dataset has only human subjects. Label all as human=1.
+  Generate synthetic bot rows by: sampling hold/flight times from
+  a uniform(5ms, 30ms) distribution (bots are fast and uniform).
+  Generate 1× the number of human rows as synthetic bot rows.
+
+Model: src/models/train_ks.py
+- Model: RandomForestClassifier(n_estimators=300, max_depth=12, random_state=42)
+- Split: 80/20 stratified train/test
+- Calibrate with CalibratedClassifierCV(method='isotonic', cv=5) on train set
+- Evaluate: ROC-AUC, F1, confusion matrix on test set
+- Save fitted pipeline (scaler + model) to MLflow as artifact 'ks_model'
+- Log params and metrics to MLflow run named 'ks_model_v1'
+
+### 2. Balabit mouse → ms_model
+
+File: src/features/ms_pipeline.py
+Dataset: data/raw/mouse/ — one CSV per user, columns: record_time, state,
+  x, y (check actual Balabit column names and adapt)
+
+Feature extraction (per session, sliding 30-second windows):
+- velocity_mean, velocity_std — pixel distance / time delta
+- acceleration_mean — velocity delta / time delta
+- curvature_mean — angular change per unit distance
+- idle_ratio — fraction of time with zero movement
+- click_count — number of click state transitions
+- direction_changes — count of angle reversals > 45 degrees
+- Output: one row per window, label from Balabit's illegal/legal session labels
+
+Model: src/models/train_ms.py
+- Model: RandomForestClassifier(n_estimators=300, max_depth=12, random_state=42)
+- Same calibration, split, eval, MLflow logging as ks_model
+- Save as artifact 'ms_model'
+
+### 3. Fingerprint HTML → fp_model
+
+File: src/features/fp_pipeline.py
+Dataset: data/raw/fingerprint/human/*.html and data/raw/fingerprint/bot/*.html
+
+Feature extraction (parse each HTML file with BeautifulSoup + re):
+- canvas_hash — hash of toDataURL canvas value if present in script
+- webgl_renderer_hash — hash of WebGL renderer string
+- ua_bot_score — regex score: contains 'HeadlessChrome'=1, 'PhantomJS'=1, else 0
+- timezone_offset — extracted numeric offset
+- language_count — len of languages array
+- plugin_count — len of plugins array
+- screen_resolution_category — bucketed: mobile/tablet/desktop/unusual
+- touch_support — 0/1
+- webdriver_flag — 0/1 (navigator.webdriver present and true)
+- font_count — number of fonts detected
+- Label: 1 if from human/ folder, 0 if from bot/ folder
+
+Model: src/models/train_fp.py
+- Model: XGBClassifier(n_estimators=300, max_depth=6, learning_rate=0.05,
+    subsample=0.8, colsample_bytree=0.8, random_state=42, eval_metric='logloss')
+- Same calibration, split, eval, MLflow logging
+- Save as artifact 'fp_model'
+
+### 4. CIC-IDS-2017 → net_model
+
+File: src/features/net_pipeline.py
+Dataset: data/raw/network/ — multiple CSVs with columns including
+  'Flow Duration', 'Total Fwd Packets', 'Total Backward Packets',
+  'Flow Bytes/s', 'Flow Packets/s', 'Flow IAT Mean', 'Flow IAT Std',
+  ' Label' (note: CIC-IDS columns have leading spaces — strip all column names)
+
+Feature extraction:
+- flow_duration_log — log1p of flow duration
+- fwd_pkt_count, bwd_pkt_count
+- flow_bytes_per_sec — clip outliers at 99th percentile
+- flow_pkts_per_sec
+- iat_mean, iat_std — inter-arrival time stats
+- Label mapping: 'BENIGN' → 1 (human/normal), everything else → 0 (attack/bot)
+- Drop rows where flow_bytes_per_sec is inf or NaN
+
+Model: src/models/train_net.py
+- Model: IsolationForest(n_estimators=200, contamination=0.3, random_state=42)
+  Train ONLY on BENIGN rows — unsupervised, learns what normal looks like.
+  At predict time: decision_function output → scale to [0,1] via MinMaxScaler
+  → interpret as p(bot): high anomaly score = high p(bot).
+- No calibration needed (output is already a continuous score).
+- Evaluate: ROC-AUC using full labeled test set (bot rows as positives).
+- Save scaler + model as artifact 'net_model'
+
+### 5. m4d web bot → wb_model
+
+File: src/features/wb_pipeline.py
+Dataset: data/raw/webbot/ — inspect actual file format first with
+  pandas read_csv or read_json, then adapt.
+
+Feature extraction (adapt to actual columns, but target these signals):
+- request_rate — requests per second in session
+- ua_entropy — Shannon entropy of user-agent string characters
+- header_order_hash — hash of HTTP header name ordering
+- js_enabled — 0/1
+- timing_regularity — std of inter-request gaps (low std = bot)
+- referrer_present — 0/1
+- Label: whatever bot/human label column exists in m4d dataset
+
+Model: src/models/train_wb.py
+- Model: XGBClassifier same hyperparams as fp_model
+- Same calibration, split, eval, MLflow logging
+- Save as artifact 'wb_model'
+
+---
+
+## Level 2 meta-learner — train_meta.py
+
+File: src/models/train_meta.py
+
+How to generate meta-learner training data (no Playwright, no session fusion):
+
+Step 1: Load the held-out test sets saved by each sub-model training script.
+  Each training script must save its test set features + labels to
+  data/processed/{signal}_test.parquet after training.
+
+Step 2: For each test set, run the corresponding calibrated sub-model
+  to get probability scores:
+    p_ks  = ks_model.predict_proba(ks_test_features)[:,1]
+    p_ms  = ms_model.predict_proba(ms_test_features)[:,1]
+    p_fp  = fp_model.predict_proba(fp_test_features)[:,1]
+    p_net = net_model.predict_proba(net_test_features)[:,1]   # scaled IF score
+    p_wb  = wb_model.predict_proba(wb_test_features)[:,1]
+
+Step 3: For each label class (0 and 1) separately, randomly pair one
+  probability score from each signal's test set using seed=42.
+  This pairing is safe because we are pairing calibrated probabilities
+  (all on the same [0,1] semantic scale), NOT raw features.
+  Missing signal → impute with 0.5 (maximally uncertain prior, not -1 or 0).
+
+Step 4: Build meta training matrix:
+  X_meta shape: (n_rows, 5) columns = [p_ks, p_ms, p_fp, p_net, p_wb]
+  y_meta: the label (0 or 1)
+
+Step 5: Train meta-learner:
+  LogisticRegression(C=1.0, max_iter=1000, random_state=42)
+  80/20 stratified split on X_meta / y_meta
+  Evaluate: ROC-AUC, F1, log loss on meta test set
+  Log to MLflow run named 'meta_model_v1'
+  Save as artifact 'meta_model'
+
+---
+
+## FastAPI inference layer
+
+File: src/api/main.py and src/api/assess.py
+
+On startup:
+- Load all 6 MLflow model artifacts into memory (5 sub-models + meta_model)
+- Load all 5 fitted scikit-learn pipelines (feature transformers)
+- Initialize Redis client for fingerprint hash cache and IP rep cache
+
+POST /v1/assess-session
+Request body (src/api/schemas.py — Pydantic model):
+  {
+    "session_id": str,
+    "keystroke": { ...raw timing fields... } | null,
+    "mouse": { ...raw movement fields... } | null,
+    "fingerprint": { ...raw JS payload fields... } | null,
+    "network": { ...raw flow fields... } | null,
+    "webbot": { ...raw request fields... } | null
+  }
+
+Endpoint logic (assess.py):
+1. For each signal present in request body:
+   - Run through fitted feature pipeline → feature vector
+   - Run sub-model.predict_proba() → probability score
+   - If signal absent: use 0.5
+2. Assemble [p_ks, p_ms, p_fp, p_net, p_wb]
+3. meta_model.predict_proba([[p_ks, p_ms, p_fp, p_net, p_wb]])[0][1] → risk_float
+4. risk_score = int(risk_float * 100)
+5. decision logic:
+   - 0–39: issue signed JWT (python-jose, RS256, 15min expiry) → {"decision": "allow", "token": ...}
+   - 40–69: → {"decision": "stepup", "challenge": "otp"}
+   - 70+:  → HTTPException(403, detail="blocked")
+6. Log session_id, risk_score, decision, signal_presence_mask to BigQuery (or local CSV if BQ not set up)
+
+Use asyncio.gather() to run all five sub-model calls concurrently.
+Target: entire endpoint under 30ms p95.
+
+---
+
+## MLOps wiring
+
+DVC (dvc.yaml):
+  Stage 'featurize': runs all five feature extraction scripts, deps = raw data folders,
+    outs = data/processed/*.parquet
+  Stage 'train_submodels': runs all five train_*.py scripts, deps = processed parquets,
+    outs = mlflow model URIs (or a versions.json file listing run IDs)
+  Stage 'train_meta': runs train_meta.py, deps = all five _test.parquet files
+
+MLflow:
+  Use local tracking: mlflow.set_tracking_uri('mlflow/')
+  Each training script: mlflow.set_experiment('{signal}_detection')
+  Log: all hyperparameters, train/test ROC-AUC, F1, confusion matrix as artifact
+  Register best model to MLflow Model Registry with alias 'production'
+
+Deepchecks (run after featurize stage):
+  For each processed parquet:
+    - Check label imbalance (warn if ratio > 4:1)
+    - Check for high null rate per column (warn if > 40%)
+    - Check for feature drift if a previous version of the parquet exists
+  Save reports to reports/{signal}_data_validation.html
+
+---
+
+## Constraints
+
+- Python 3.10+
+- Libraries: pandas, numpy, scikit-learn, xgboost, fastapi, uvicorn,
+    mlflow, dvc, deepchecks, python-jose, slowapi, redis, beautifulsoup4,
+    pyarrow, scipy
+- All random seeds = 42
+- No hardcoded absolute paths — use pathlib.Path relative to project root
+- Every training script must be runnable standalone:
+    python src/models/train_ks.py --data_dir data/raw/keystroke
+      --processed_dir data/processed --mlflow_uri mlflow/
+- Every feature pipeline must work both offline (called by training scripts)
+    and online (imported by FastAPI assess.py at inference time)
+- The fitted pipeline objects (scalers, encoders) must be saved alongside
+    their models in MLflow so inference never refits anything
+- Add type hints to all functions
+- Add a README.md explaining: how to run DVC pipeline, how to start FastAPI,
+    how to call /v1/assess-session with a sample curl command
+
+---
+
+## Final stage — GAN adversarial training
+
+Run this after all sub-models are trained, validated, and registered in MLflow.
+The goal is to harden each sub-model against adversarial bot samples that
+fool the current model. GANs generate synthetic bot sessions that the
+discriminator (your trained sub-model) currently misclassifies as human.
+You retrain each sub-model on the augmented dataset and re-register if AUC improves.
+
+---
+
+### Architecture
+
+Use a Conditional GAN (CGAN) per signal — one generator per sub-model.
+Condition on label so the generator learns to produce specifically
+bot-like samples that evade the current classifier.
+
+For each signal independently:
+
+  Generator G:
+    Input:  noise vector z ~ N(0,1) of dim 64, conditioned on label=0 (bot)
+    Output: synthetic feature vector of same dim as that signal's feature space
+    Architecture: 3-layer MLP, dims [64+1 → 128 → 256 → feature_dim]
+    Activation: LeakyReLU(0.2), final layer Tanh (features are normalized to [-1,1])
+
+  Discriminator D:
+    Input:  feature vector of signal's feature space, conditioned on label
+    Output: scalar — real or fake
+    Architecture: 3-layer MLP, dims [feature_dim+1 → 256 → 128 → 1]
+    Activation: LeakyReLU(0.2), final layer Sigmoid
+    Note: D here is your existing trained sub-model acting as an ADDITIONAL
+    adversarial signal, not the sole discriminator. Run both in parallel.
+
+  Adversarial discriminator D_adv:
+    Same architecture as D above but trained from scratch jointly with G.
+    Your trained sub-model (ks_model, fp_model etc.) acts as a frozen
+    oracle — G succeeds when it fools both D_adv AND the frozen sub-model.
+
+---
+
+### File structure to add
+src/
+gan/
+init.py
+generator.py         # Generator MLP, shared across signals
+discriminator.py     # Discriminator MLP, shared across signals
+train_gan.py         # main GAN training loop per signal
+adversarial_augment.py  # generates adversarial samples, filters by oracle score
+retrain_with_augment.py # retrains sub-model on original + adversarial data
+
+---
+
+### train_gan.py — GAN training loop
+
+For each signal in [ks, ms, fp, net, wb]:
+
+  1. Load processed feature parquet for that signal (bot rows only for conditioning).
+     Normalize all features to [-1, 1] using MinMaxScaler fitted on training data.
+     Save this scaler — you need it to inverse-transform generated samples later.
+
+  2. Initialize Generator G and Discriminator D_adv with Xavier weight init.
+
+  3. Training loop — 2000 epochs, batch size 64:
+     a. Sample real bot feature vectors from training set.
+     b. Sample noise z ~ N(0, 1) shape (batch, 64). Concatenate label=0.
+     c. G(z, label=0) → fake bot feature vectors.
+     d. D_adv loss: BCELoss on (real=1, fake=0). Update D_adv weights.
+     e. G loss: BCELoss fooling D_adv (target=1 for fake samples)
+                PLUS oracle_loss: frozen sub-model must also predict human (label=1)
+                for generated samples with high confidence.
+                oracle_loss = mean(frozen_sub_model.predict_proba(fake_samples)[:,1])
+                G_total_loss = adv_loss + 0.5 * (1 - oracle_loss)
+                The second term maximizes the oracle's human-confidence on fake bots.
+     f. Update G weights on G_total_loss.
+     g. Log G_loss, D_loss, oracle_loss to MLflow every 100 epochs.
+
+  4. After training: save G weights to MLflow as artifact '{signal}_generator_v1'.
+
+---
+
+### adversarial_augment.py — filter and select adversarial samples
+
+  1. Load trained Generator G for each signal.
+  2. Generate 10× the number of original bot training rows as candidate samples.
+  3. Run frozen sub-model on all candidates.
+     Keep only samples where sub-model predicts human with confidence > 0.6:
+       adversarial_mask = frozen_sub_model.predict_proba(candidates)[:,1] > 0.6
+     These are the samples that actually fool the current model — the hard cases.
+  4. Inverse-transform kept samples back to original feature scale.
+  5. Label all kept samples as bot (label=0).
+  6. Save adversarial samples to data/processed/{signal}_adversarial.parquet.
+  7. Log count of kept samples, mean oracle confidence to MLflow.
+
+---
+
+### retrain_with_augment.py — retrain and conditionally re-register
+
+  For each signal:
+
+  1. Load original training parquet + adversarial parquet for that signal.
+  2. Concatenate: augmented_train = pd.concat([original_train, adversarial_samples])
+     Shuffle with seed=42.
+  3. Retrain sub-model from scratch on augmented_train with same hyperparameters
+     as original training script.
+  4. Recalibrate with CalibratedClassifierCV.
+  5. Evaluate on the ORIGINAL held-out test set (not augmented — you want to
+     measure robustness on real data, not on your own generated samples).
+  6. Compare ROC-AUC of retrained model vs. currently registered production model:
+     - If retrained AUC >= original AUC - 0.01 (within 1% tolerance):
+         register retrained model as '{signal}_model' in MLflow Model Registry
+         with alias 'production', archive previous version.
+         Log: 'adversarial_retrain_accepted=True'
+     - Else:
+         keep original model in production.
+         Log: 'adversarial_retrain_accepted=False', log AUC delta.
+  7. Re-run Deepchecks validation on augmented training set.
+     Save report to reports/{signal}_post_gan_validation.html.
+     Check specifically: did augmentation shift the feature distribution beyond
+     2 standard deviations from the original training set mean? Warn if yes.
+
+---
+
+### After all five signals are retrained
+
+  Run train_meta.py again from scratch:
+  - Regenerate meta-learner training data using the new retrained sub-models
+    (their predict_proba outputs on the held-out test sets will have shifted).
+  - Retrain LogisticRegression meta-learner on new [p_ks, p_ms, p_fp, p_net, p_wb].
+  - Register new meta_model if AUC improves, same conditional logic as above.
+  - Log to MLflow run named 'meta_model_post_gan_v1'.
+
+---
+
+### DVC stage to add
+
+In dvc.yaml, add after the 'train_meta' stage:
+
+  Stage 'gan_train':
+    runs: python src/gan/train_gan.py
+    deps: data/processed/*.parquet, src/models/ (all trained sub-model artifacts)
+    outs: data/processed/*_adversarial.parquet
+
+  Stage 'adversarial_retrain':
+    runs: python src/gan/retrain_with_augment.py
+    deps: data/processed/*_adversarial.parquet
+    outs: reports/*_post_gan_validation.html
+
+  Stage 'retrain_meta_post_gan':
+    runs: python src/models/train_meta.py
+    deps: adversarial_retrain stage outputs
+
+---
+
+### Constraints specific to GAN stage
+
+- Use PyTorch for Generator and Discriminator (not TensorFlow).
+  pip install torch torchvision
+- Keep Generator and Discriminator lightweight — this is tabular data,
+  not images. No convolutions. Pure MLP only.
+- Frozen sub-model during GAN training means: load the MLflow artifact,
+  call model.predict_proba(), wrap in torch.no_grad() equivalent —
+  scikit-learn and XGBoost models are not PyTorch, so just call them
+  normally with numpy arrays. No gradient flows through them.
+- Do not generate adversarial samples for the network signal (net_model)
+  using GAN. IsolationForest does not produce gradients and the oracle_loss
+  term requires differentiable-ish feedback. For net_model: use simple
+  boundary attack instead — perturb real bot samples by Gaussian noise
+  scaled to push them across the decision boundary, filter same way.
+- Seed everything: torch.manual_seed(42), numpy and random as before.
+- GAN training for all five signals should complete in under 2 hours on CPU.
+  If it exceeds this, reduce to 1000 epochs.
+
+### Fingerprint GAN — categorical feature handling
+
+Fingerprint features split into two groups:
+
+Continuous (generate with GAN):
+  timezone_offset, language_count, plugin_count,
+  font_count, screen_resolution (as numeric w/h pair)
+
+Categorical / binary (do NOT generate with GAN):
+  canvas_hash, webgl_renderer_hash, ua_bot_score,
+  webdriver_flag, touch_support
+
+For categorical features in adversarial samples:
+  Sample from the empirical frequency distribution of the
+  human training set for that feature.
+  Example: if 73% of human sessions have touch_support=0,
+  sample touch_support ~ Bernoulli(0.27) for generated samples.
+  Do this after the GAN generates the continuous features,
+  then concatenate before passing to the oracle (fp_model).
+  This keeps the adversarial samples realistic —
+  a generated fingerprint with human-like canvas hash
+  but machine-perfect timezone is easy to catch.
+
+For each signal in [ks, ms, fp, net, wb]:
+
+Exception for fp signal — see
+'Fingerprint GAN — categorical feature handling' below.
+Run GAN only on continuous fp features, then
+sample categorical features empirically before oracle evaluation.

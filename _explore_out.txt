@@ -1,0 +1,60 @@
+1. KEYSTROKE DATA
+Header: subject,sessionIndex,rep,H.period,DD.period.t,UD.period.t,H.t,DD.t.i,UD.t.i,H.i,DD.i.e,UD.i.e,H.e,DD.e.five,UD.e.five,H.five,DD.five.Shift.r,UD.five.Shift.r,H.Shift.r,DD.Shift.r.o,UD.Shift.r.o,H.o,DD.o.a,UD.o.a,H.a,DD.a.n,UD.a.n,H.n,DD.n.l,UD.n.l,H.l,DD.l.Return,UD.l.Return,H.Return
+Row1: s002,1,1,0.1491,0.3979,0.2488,0.1069,0.1674,0.0605,0.1169,0.2212,0.1043,0.1417,1.1885,1.0468,0.1146,1.6055,1.4909,0.1067,0.7590,0.6523,0.1016,0.2136,0.1120,0.1349,0.1484,0.0135,0.0932,0.3515,0.2583,0.
+Total lines: 20401
+
+2. MOUSE DATA
+record timestamp,client timestamp,button,state,x,y
+0.0,0.0,NoButton,Move,126,337
+0.0,0.0160000000615,NoButton,Move,129,337
+0.0,0.0319999998901,NoButton,Move,136,337
+0.0,0.0470000000205,NoButton,Move,155,339
+0.0,0.063000000082,NoButton,Move,185,340
+
+3. WEB LOG DATA (human)
+- - [29/Oct/2019:09:17:51 +0000] "GET / HTTP/1.1" 200 2770 "-" - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/77.0.3865.90 Chrome/77.0.3865.90 Safari/537.36"
+- - [29/Oct/2019:09:17:51 +0000] "GET /css/main.css HTTP/1.1" 200 764 "https://160.40.52.164/" g2gh9qmk9krld14h5uojlg7g10 "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/77.0.3865.90 Chrome/77.0.3865.90 Safari/537.36"
+- - [29/Oct/2019:09:17:51 +0000] "GET /js/initialise_vars.js HTTP/1.1" 200 613 "https://160.40.52.164/" g2gh9qmk9krld14h5uojlg7g10 "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/77.0.3865.90 Chrome/77.0.3865.90 Safari/537.36"
+
+4. WEB LOG DATA (bot)
+- - [01/Nov/2019:10:43:18 +0000] "GET / HTTP/1.0" 200 2045 "-" - "-"
+- - [01/Nov/2019:10:47:35 +0000] "GET / HTTP/1.1" 200 1172 "-" 97hf7ciplt2k54f5j6109nekn0 "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0"
+- - [01/Nov/2019:10:47:35 +0000] "GET /css/main.css HTTP/1.1" 200 735 "http://160.40.52.164/" 97hf7ciplt2k54f5j6109nekn0 "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0"
+
+5. NETWORK INTRUSION DATA
+Destination Port, Flow Duration, Total Fwd Packets, Total Backward Packets,Total Length of Fwd Packets, Total Length of Bwd Packets, Fwd Packet Length Max, Fwd Packet Length Min, Fwd Packet Length Mean, Fwd Packet Length Std,Bwd Packet Length Max, Bwd Packet Length Min, Bwd Packet Length Mean, Bwd Packet Length Std,Flow Bytes/s, Flow Packets/s, Flow IAT Mean, Flow IAT Std, Flow IAT Max, Flow IAT M
+3268,112740690,32,16,6448,1152,403,0,201.5,204.7242047,72,72,72,0,67.41133126,0.425755776,2398738.085,5798697.94,16400000,3,113000000,3636796.452,6848760.823,16400000,3,113000000,7516023.2,8323384.915,16400000,3,1,0,0,0,1024,512,0.283837184,0.141918592,0,403,163.3265306,178.9317127,32016.55782,0,1,0,0,1,0,0,0,0,166.7291667,201.5,72,1024,0,0,0,0,0,0,32,6448,16,1152,377,2079,15,32,359.4285714,11.998
+389,112740560,32,16,6448,5056,403,0,201.5,204.7242047,316,316,316,0,102.0395854,0.425756267,2398735.319,5798709.67,16400000,2,113000000,3636792.258,6848776.836,16400000,2,113000000,7516016.133,8323376.147,16400000,4,1,0,0,0,1024,512,0.283837512,0.141918756,0,403,243,174.7169139,30526,0,1,0,0,1,0,0,0,0,248.0625,201.5,316,1024,0,0,0,0,0,0,32,6448,16,5056,955,2079,15,32,320.2857143,15.74499165,330,28
+
+6. BROWSER FINGERPRINT (dataset.json)
+JSON array, 240 items
+Keys: ['label', 'fingerprint', 'screen', 'userAgent', 'feature', 'language', 'devices']
+{
+  "label": "human",
+  "fingerprint": "4effbeec",
+  "screen": {
+    "width": 1366,
+    "height": 1080,
+    "availWidth": 1366,
+    "availHeight": 728
+  },
+  "userAgent": {
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) Firefox/118",
+    "platform": "MacIntel",
+    "webdriver": false
+  },
+  "feature": {
+    "canvasHash": "737dd91",
+    "webglHash": "262f210d"
+  },
+  "language": {
+    "timezone": "Asia/Kolkata",
+    "languages": [
+      "fr-FR"
+    ]
+  },
+  "devices": {
+    "hardwareConcurrency": 4,
+    "deviceMemory": 16
+  }
+}

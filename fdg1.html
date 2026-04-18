@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fingerprint Dataset Generator</title>
+
+  <!-- JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 50px;
+    }
+    button {
+      padding: 15px 25px;
+      font-size: 18px;
+      background: #38bdf8;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>📦 Fingerprint Dataset Generator</h1>
+<button onclick="generateDataset()">Generate & Download ZIP</button>
+
+<script>
+
+// ===== CONFIG =====
+const NUM_BOTS = 120;
+const NUM_HUMANS = 120;
+
+// ===== HELPERS =====
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function hash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h).toString(16);
+}
+
+// ===== BASE POOLS =====
+const timezones = ["Asia/Kolkata", "UTC", "America/New_York", "Europe/Berlin"];
+const languages = [["en-US"], ["en-US","en"], ["fr-FR"], ["de-DE"]];
+const platforms = ["Win32", "Linux x86_64", "MacIntel"];
+const userAgents = [
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) Safari/605",
+  "Mozilla/5.0 (X11; Linux x86_64) Firefox/118"
+];
+
+// ===== HUMAN =====
+function generateHuman() {
+  const tz = rand(timezones);
+  const ua = rand(userAgents);
+  const lang = rand(languages);
+
+  return {
+    label: "human",
+    fingerprint: hash(ua + tz + lang.join()),
+
+    screen: {
+      width: rand([1366, 1536, 1920]),
+      height: rand([768, 864, 1080]),
+      availWidth: 1366,
+      availHeight: 728
+    },
+
+    userAgent: {
+      ua,
+      platform: rand(platforms),
+      webdriver: false
+    },
+
+    feature: {
+      canvasHash: hash("canvas_human_" + Math.random()),
+      webglHash: hash("webgl_human_" + Math.random())
+    },
+
+    language: {
+      timezone: tz,
+      languages: lang
+    },
+
+    devices: {
+      hardwareConcurrency: rand([4, 8, 16]),
+      deviceMemory: rand([4, 8, 16])
+    }
+  };
+}
+
+// ===== BOT =====
+function generateBot() {
+  const tz_real = rand(timezones);
+  const tz_fake = rand(timezones);
+  const ua = rand(userAgents);
+
+  return {
+    label: "bot",
+    fingerprint: hash(ua + tz_fake + Math.random()),
+
+    screen: {
+      width: 1920,
+      height: 1080,
+      availWidth: rand([800, 1024]),
+      availHeight: rand([600, 768])
+    },
+
+    userAgent: {
+      ua: ua.replace("Chrome", "HeadlessChrome"),
+      platform: "Linux x86_64",
+      webdriver: true
+    },
+
+    feature: {
+      canvasHash: hash("canvas_bot_" + Math.random()),
+      webglHash: "webgl_disabled"
+    },
+
+    language: {
+      timezone: tz_fake,
+      realTimezone: tz_real,
+      languages: ["en-US","ru-RU"]
+    },
+
+    devices: {
+      hardwareConcurrency: rand([1, 2]),
+      deviceMemory: rand([1, 2])
+    }
+  };
+}
+
+// ===== HTML TEMPLATE =====
+function generateHTML(profile, index) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fingerprint ${index}</title>
+  <meta name="label" content="${profile.label}">
+  <style>
+    body { font-family: monospace; background:#0f172a; color:#e2e8f0; padding:20px;}
+    .card { background:#1e293b; padding:10px; margin:10px 0; border-radius:8px;}
+  </style>
+</head>
+<body>
+
+<h2>${profile.label.toUpperCase()} PROFILE</h2>
+
+<div class="card"><b>Fingerprint:</b> ${profile.fingerprint}</div>
+
+<div class="card"><b>User Agent:</b> ${profile.userAgent.ua}</div>
+<div class="card"><b>Platform:</b> ${profile.userAgent.platform}</div>
+<div class="card"><b>Webdriver:</b> ${profile.userAgent.webdriver}</div>
+
+<div class="card"><b>Screen:</b> ${profile.screen.width}x${profile.screen.height}</div>
+<div class="card"><b>Avail:</b> ${profile.screen.availWidth}x${profile.screen.availHeight}</div>
+
+<div class="card"><b>Timezone:</b> ${profile.language.timezone}</div>
+<div class="card"><b>Languages:</b> ${profile.language.languages.join(",")}</div>
+
+<div class="card"><b>Canvas Hash:</b> ${profile.feature.canvasHash}</div>
+<div class="card"><b>WebGL Hash:</b> ${profile.feature.webglHash}</div>
+
+<div class="card"><b>CPU:</b> ${profile.devices.hardwareConcurrency}</div>
+<div class="card"><b>RAM:</b> ${profile.devices.deviceMemory}</div>
+
+</body>
+</html>
+`;
+}
+
+// ===== MAIN =====
+async function generateDataset() {
+  const zip = new JSZip();
+  const dataset = [];
+  let index = 0;
+
+  // Humans
+  for (let i = 0; i < NUM_HUMANS; i++) {
+    const profile = generateHuman();
+    dataset.push(profile);
+    zip.file(`human_${i}.html`, generateHTML(profile, index++));
+  }
+
+  // Bots
+  for (let i = 0; i < NUM_BOTS; i++) {
+    const profile = generateBot();
+    dataset.push(profile);
+    zip.file(`bot_${i}.html`, generateHTML(profile, index++));
+  }
+
+  // JSON dataset
+  zip.file("dataset.json", JSON.stringify(dataset, null, 2));
+
+  // Generate ZIP
+  const content = await zip.generateAsync({ type: "blob" });
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(content);
+  a.download = "fingerprint_dataset.zip";
+  a.click();
+}
+
+</script>
+
+</body>
+</html>

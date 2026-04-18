@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>wb Data Validation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+    h1 { color: #333; } h2 { color: #555; margin-top: 30px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+    th { background: #4a90d9; color: white; }
+    tr:nth-child(even) { background: #f2f2f2; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:12px;
+              background:#4a90d9; color:white; font-size:0.85em; }
+  </style>
+</head>
+<body>
+  <h1>Data Validation Report: <span class="badge">wb</span></h1>
+  <p><b>Total rows:</b> 150 &nbsp;|&nbsp;
+     <b>Features:</b> 9 &nbsp;|&nbsp;
+     <b>Label counts:</b> {0: 100, 1: 50}</p>
+
+  <h2>Null Rates (%)</h2>
+  <table>
+    <tr><th>Column</th><th>Null %</th></tr>
+    <tr><td>request_rate</td><td>0.0</td></tr><tr><td>ua_entropy</td><td>0.0</td></tr><tr><td>method_diversity</td><td>0.0</td></tr><tr><td>js_enabled</td><td>0.0</td></tr><tr><td>timing_regularity</td><td>0.0</td></tr><tr><td>referrer_present</td><td>0.0</td></tr><tr><td>unique_urls</td><td>0.0</td></tr><tr><td>avg_response_size</td><td>0.0</td></tr><tr><td>error_rate</td><td>0.0</td></tr><tr><td>label</td><td>0.0</td></tr>
+  </table>
+
+  <h2>Descriptive Statistics</h2>
+  <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>request_rate</th>
+      <th>ua_entropy</th>
+      <th>method_diversity</th>
+      <th>js_enabled</th>
+      <th>timing_regularity</th>
+      <th>referrer_present</th>
+      <th>unique_urls</th>
+      <th>avg_response_size</th>
+      <th>error_rate</th>
+      <th>label</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>150.0000</td>
+      <td>150.0000</td>
+      <td>150.0</td>
+      <td>150.0</td>
+      <td>150.0000</td>
+      <td>150.0</td>
+      <td>150.0000</td>
+      <td>150.0000</td>
+      <td>150.0</td>
+      <td>150.0000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>0.7800</td>
+      <td>5.1877</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>0.9023</td>
+      <td>1.0</td>
+      <td>17.2400</td>
+      <td>686.3682</td>
+      <td>0.0</td>
+      <td>0.3333</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>0.2786</td>
+      <td>0.0017</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0921</td>
+      <td>0.0</td>
+      <td>1.9306</td>
+      <td>91.5223</td>
+      <td>0.0</td>
+      <td>0.4730</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>0.5815</td>
+      <td>5.1865</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>0.7040</td>
+      <td>1.0</td>
+      <td>13.0000</td>
+      <td>575.2356</td>
+      <td>0.0</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>0.6325</td>
+      <td>5.1865</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>0.8329</td>
+      <td>1.0</td>
+      <td>16.0000</td>
+      <td>616.0940</td>
+      <td>0.0</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>0.7093</td>
+      <td>5.1865</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>0.9018</td>
+      <td>1.0</td>
+      <td>17.0000</td>
+      <td>664.2855</td>
+      <td>0.0</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>0.7700</td>
+      <td>5.1900</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>0.9510</td>
+      <td>1.0</td>
+      <td>18.7500</td>
+      <td>722.8628</td>
+      <td>0.0</td>
+      <td>1.0000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>2.1600</td>
+      <td>5.1900</td>
+      <td>2.0</td>
+      <td>1.0</td>
+      <td>1.2848</td>
+      <td>1.0</td>
+      <td>22.0000</td>
+      <td>1016.0308</td>
+      <td>0.0</td>
+      <td>1.0000</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

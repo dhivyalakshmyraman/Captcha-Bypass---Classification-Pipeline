@@ -1,0 +1,17 @@
+# Ignore dataset folders
+
+
+# Ignore large data
+
+data/
+*.zip
+
+# Python cache
+
+**pycache**/
+*.pyc
+
+# OS files
+
+.DS_Store
+Thumbs.db
