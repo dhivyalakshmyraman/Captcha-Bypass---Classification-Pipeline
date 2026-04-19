@@ -1,0 +1,58 @@
+Passive CAPTCHA-less Bot vs Human Detection System (UIDAI Use Case)
+
+Problem Title
+
+Passive AI-Based Human vs Bot Detection for Secure API Access
+
+Gist of Techniques
+
+
+
+
+
+Browser & device fingerprinting
+
+
+
+Behavioral biometrics (mouse, scroll, timing)
+
+
+
+Entropy & anomaly analysis
+
+
+
+ML models (XGBoost, Random Forest)
+
+
+
+Risk scoring & decision engine
+
+
+
+Token-based API protection
+
+
+
+Privacy-preserving data collection
+
+Scope & Feasibility
+
+✅ Very strong scope ✅ High innovation & real-world impact ⚠️ Requires careful privacy handling ⚠️ Needs good data simulation
+
+Verdict: ✔️ Excellent choice – high-impact & cutting-edge - want to build mlops pipeline with Backend / API: FastAPI
+
+
+
+
+
+ML Platform: Vertex AI
+
+
+
+Experiment Tracking & Reproducibility: MLflow + DVC
+
+
+
+Data & Model Validation: Deepchecks
+
